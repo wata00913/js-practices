@@ -54,3 +54,27 @@ class Memo {
     return this._id;
   }
 }
+
+function parseOptions() {
+  return require("minimist")(process.argv.slice(2), {
+    default: {
+      l: false,
+      r: false,
+      d: false,
+    },
+  });
+}
+
+if (process.stdin.isTTY) {
+  const opts = parseOptions();
+  if (opts.l) {
+    const memos = Memo.all();
+    memos.forEach((memo) => {
+      console.log(memo.content.split("\n")[0]);
+    });
+  }
+} else {
+  const content = fs.readFileSync("/dev/stdin", "utf8");
+  const memo = new Memo({ content: content });
+  memo.create();
+}
