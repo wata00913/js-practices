@@ -5,6 +5,12 @@ const WIDTH = 20;
 const DAY_WIDTH = 2;
 const MAX_DAYS_WEEK_NUM = 7;
 
+const opts = parseOptions();
+console.log(`      ${opts.m}月 ${opts.y}`);
+console.log("日 月 火 水 木 金 土");
+const daysOfWeeks = buildDaysOfWeeeks(opts.y, opts.m);
+renderWeeks(daysOfWeeks);
+
 function parseOptions() {
   const today = new Date();
   return require("minimist")(process.argv.slice(2), {
@@ -17,7 +23,7 @@ function eachSlice(arr, n, result = []) {
   return eachSlice(arr, n, [...result, arr.splice(0, n)]);
 }
 
-function daysOfWeeeks(year, month) {
+function buildDaysOfWeeeks(year, month) {
   const thisMonthDate = new Date(year, month - 1);
   const days = [...Array(dateFns.getDaysInMonth(thisMonthDate))].map(
     (_, i) => i + 1
@@ -28,24 +34,23 @@ function daysOfWeeeks(year, month) {
   return eachSlice(days, MAX_DAYS_WEEK_NUM, [days.splice(0, offset)]);
 }
 
-function convertDaysWeekToLine(dWeek, isLast = false) {
-  const line = dWeek
+function convertDaysWeekToLine(daysOfWeek, isFirstWeek = false) {
+  const line = daysOfWeek
     .map((day) => day.toString().padStart(DAY_WIDTH, " "))
     .join(" ");
-  return isLast ? line.padEnd(WIDTH, " ") : line.padStart(WIDTH, " ");
+
+  if (isFirstWeek) {
+    return line.padStart(WIDTH, " ");
+  } else {
+    return line;
+  }
 }
 
-function render_weeks(dWeeks) {
-  const line = dWeeks
-    .map((dWeek, idx) => {
-      return convertDaysWeekToLine(dWeek, dWeeks.length == idx + 1);
+function renderWeeks(daysOfWeeks) {
+  const line = daysOfWeeks
+    .map((daysOfWeek, idx) => {
+      return convertDaysWeekToLine(daysOfWeek, idx === 0);
     })
     .join("\n");
   console.log(line);
 }
-
-const opts = parseOptions();
-console.log(`      ${opts.m}月 ${opts.y}`);
-console.log("日 月 火 水 木 金 土");
-const dWeeks = daysOfWeeeks(opts.y, opts.m);
-render_weeks(dWeeks);
