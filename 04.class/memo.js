@@ -16,12 +16,12 @@ class Memo {
 
   find(id) {
     const all = Memo.all();
-    return all.find((data) => data === id);
+    return all.find((data) => data.id === id);
   }
 
   destroy() {
     const all = Memo.all();
-    const targetIdx = all.findIndex((data) => data === this.id);
+    const targetIdx = all.findIndex((data) => data.id === this.id);
 
     if (targetIdx === -1)
       throw "Can not delete because it is new or has been deleted.";
