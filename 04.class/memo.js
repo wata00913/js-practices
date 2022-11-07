@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const fs = require("fs");
+const { Select } = require("enquirer");
 
 class Memo {
   constructor({ id, content = "" }) {
@@ -65,12 +66,45 @@ function parseOptions() {
   });
 }
 
+function displayMemoPrompt(memos, opts, afterAction = () => {}) {
+  const prompt = new Select({
+    name: "memo",
+    message: opts.message,
+    footer() {
+      return opts.isShowDetail ? memos[this.state.index].content : "";
+    },
+    choices() {
+      return memos.map((memo) => memo.content.split("\n")[0]);
+    },
+    result() {
+      afterAction(memos[this.state.index]);
+    },
+  });
+
+  prompt.run().then().catch(console.error);
+}
+
 if (process.stdin.isTTY) {
   const opts = parseOptions();
+  const memos = Memo.all();
   if (opts.l) {
-    const memos = Memo.all();
     memos.forEach((memo) => {
       console.log(memo.content.split("\n")[0]);
+    });
+  } else if (opts.r) {
+    const promptOpts = {
+      isShowDetail: true,
+      message: "Choose a note you want to see:",
+    };
+    displayMemoPrompt(memos, promptOpts);
+  } else if (opts.d) {
+    const promptOpts = {
+      isShowDetail: false,
+      message: "Choose a note you want to delete:",
+    };
+    displayMemoPrompt(memos, promptOpts, (memo) => {
+      memo.destroy();
+      console.log("Deleted memo");
     });
   }
 } else {
