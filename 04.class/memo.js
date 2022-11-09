@@ -84,31 +84,41 @@ function displayMemoPrompt(memos, opts, afterAction = () => {}) {
   prompt.run().catch(console.error);
 }
 
-if (process.stdin.isTTY) {
-  const opts = parseOptions();
-  const memos = Memo.all();
-  if (opts.l) {
-    memos.forEach((memo) => {
-      console.log(memo.content.split("\n")[0]);
-    });
-  } else if (opts.r) {
-    const promptOpts = {
-      isShowDetail: true,
-      message: "Choose a note you want to see:",
-    };
-    displayMemoPrompt(memos, promptOpts);
-  } else if (opts.d) {
-    const promptOpts = {
-      isShowDetail: false,
-      message: "Choose a note you want to delete:",
-    };
-    displayMemoPrompt(memos, promptOpts, (memo) => {
-      memo.destroy();
-      console.log("Deleted memo");
-    });
+function run() {
+  if (process.stdin.isTTY) {
+    const opts = parseOptions();
+    const memos = Memo.all();
+
+    if (memos.length === 0) {
+      console.log("メモがありません。");
+      return;
+    }
+
+    if (opts.l) {
+      memos.forEach((memo) => {
+        console.log(memo.content.split("\n")[0]);
+      });
+    } else if (opts.r) {
+      const promptOpts = {
+        isShowDetail: true,
+        message: "Choose a note you want to see:",
+      };
+      displayMemoPrompt(memos, promptOpts);
+    } else if (opts.d) {
+      const promptOpts = {
+        isShowDetail: false,
+        message: "Choose a note you want to delete:",
+      };
+      displayMemoPrompt(memos, promptOpts, (memo) => {
+        memo.destroy();
+        console.log("Deleted memo");
+      });
+    }
+  } else {
+    const content = fs.readFileSync("/dev/stdin", "utf8");
+    const memo = new Memo({ content: content });
+    memo.create();
   }
-} else {
-  const content = fs.readFileSync("/dev/stdin", "utf8");
-  const memo = new Memo({ content: content });
-  memo.create();
 }
+
+run();
