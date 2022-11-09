@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const crypto = require("crypto");
 const fs = require("fs");
 const { Select } = require("enquirer");
@@ -77,7 +78,11 @@ function displayMemoPrompt(memos, opts, afterAction = () => {}) {
       return memos.map((memo) => memo.content.split("\n")[0]);
     },
     result() {
-      afterAction(memos[this.state.index]);
+      try {
+        afterAction(memos[this.state.index]);
+      } catch (e) {
+        console.log(e);
+      }
     },
   });
 
