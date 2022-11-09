@@ -90,7 +90,7 @@ function run() {
     const memos = Memo.all();
 
     if (memos.length === 0) {
-      console.log("メモがありません。");
+      console.log("No notes");
       return;
     }
 
