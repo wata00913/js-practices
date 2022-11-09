@@ -16,11 +16,6 @@ class Memo {
     fs.writeFileSync(Memo.PATH, JSON.stringify({ all: all }));
   }
 
-  find(id) {
-    const all = Memo.all();
-    return all.find((data) => data.id === id);
-  }
-
   destroy() {
     const all = Memo.all();
     const targetIdx = all.findIndex((data) => data.id === this.id);
@@ -86,7 +81,7 @@ function displayMemoPrompt(memos, opts, afterAction = () => {}) {
     },
   });
 
-  prompt.run().then().catch(console.error);
+  prompt.run().catch(console.error);
 }
 
 if (process.stdin.isTTY) {
