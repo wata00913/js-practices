@@ -72,9 +72,27 @@ async function displayMemoPrompt(memos, opts) {
   return await prompt(question);
 }
 
-function run() {
-  if (process.stdin.isTTY) {
-    const opts = parseOptions();
+class MemoCommand {
+  static createFromStdin() {
+    if (process.stdin.isTTY) {
+      console.log("no stdin");
+      return;
+    }
+
+    const content = fs.readFileSync("/dev/stdin", "utf8");
+    const memo = new Memo({ content: content });
+    memo.create();
+  }
+
+  static showList() {
+    const memos = Memo.all();
+
+    memos.forEach((memo) => {
+      console.log(memo.content.split("\n")[0]);
+    });
+  }
+
+  static async showDetail() {
     const memos = Memo.all();
 
     if (memos.length === 0) {
@@ -82,40 +100,50 @@ function run() {
       return;
     }
 
-    if (opts.l) {
-      memos.forEach((memo) => {
-        console.log(memo.content.split("\n")[0]);
-      });
-    } else if (opts.r) {
-      const promptOpts = {
-        isShowDetail: true,
-        message: "Choose a note you want to see:",
-      };
-      (async () => {
-        await displayMemoPrompt(memos, promptOpts);
-      })();
-    } else if (opts.d) {
-      const promptOpts = {
-        isShowDetail: false,
-        message: "Choose a note you want to delete:",
-      };
-      (async () => {
-        const result = await displayMemoPrompt(memos, promptOpts);
-        // 選択肢は1つなので先頭の要素を取得
-        const selected = Object.values(result.memo)[0];
-        try {
-          selected.destroy();
-          console.log("Deleted memo");
-        } catch (error) {
-          console.log(error);
-        }
-      })();
+    const promptOpts = {
+      isShowDetail: true,
+      message: "Choose a note you want to see:",
+    };
+    await displayMemoPrompt(memos, promptOpts);
+  }
+
+  static async delete() {
+    const memos = Memo.all();
+
+    if (memos.length === 0) {
+      console.log("No notes");
+      return;
     }
-  } else {
-    const content = fs.readFileSync("/dev/stdin", "utf8");
-    const memo = new Memo({ content: content });
-    memo.create();
+
+    const promptOpts = {
+      isShowDetail: false,
+      message: "Choose a note you want to delete:",
+    };
+
+    const result = await displayMemoPrompt(memos, promptOpts);
+    // 選択肢は1つなので先頭の要素を取得
+    const selected = Object.values(result.memo)[0];
+    try {
+      selected.destroy();
+      console.log("Deleted memo");
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
 
-run();
+function main() {
+  const opts = parseOptions();
+
+  if (opts.l) {
+    MemoCommand.showList();
+  } else if (opts.r) {
+    MemoCommand.showDetail();
+  } else if (opts.d) {
+    MemoCommand.delete();
+  } else {
+    MemoCommand.createFromStdin();
+  }
+}
+
+main();
