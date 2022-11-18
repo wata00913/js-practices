@@ -5,8 +5,8 @@ const { Select } = require("enquirer");
 
 class Memo {
   constructor({ id, content = "" }) {
-    this._id = id ?? crypto.randomUUID();
-    this._content = content;
+    this.id = id ?? crypto.randomUUID();
+    this.content = content;
   }
 
   create() {
@@ -31,24 +31,12 @@ class Memo {
     const str = fs.readFileSync(this.PATH);
     const allData = JSON.parse(str).all;
     return allData.map((data) => {
-      return new this({ id: data._id, content: data._content });
+      return new this({ id: data.id, content: data.content });
     });
   }
 
   static get PATH() {
     return "./data.json";
-  }
-
-  get content() {
-    return this._content;
-  }
-
-  set content(val) {
-    this._content = val;
-  }
-
-  get id() {
-    return this._id;
   }
 }
 
