@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 const crypto = require("crypto");
 const fs = require("fs");
-const { Select } = require("enquirer");
+const { prompt } = require("enquirer");
+const parseArgs = require("minimist");
 
 class Memo {
   constructor({ id, content = "" }) {
@@ -41,7 +42,7 @@ class Memo {
 }
 
 function parseOptions() {
-  return require("minimist")(process.argv.slice(2), {
+  return parseArgs(process.argv.slice(2), {
     default: {
       l: false,
       r: false,
@@ -50,26 +51,25 @@ function parseOptions() {
   });
 }
 
-function displayMemoPrompt(memos, opts, afterAction = () => {}) {
-  const prompt = new Select({
+async function displayMemoPrompt(memos, opts) {
+  const question = {
+    type: "select",
     name: "memo",
     message: opts.message,
     footer() {
       return opts.isShowDetail ? memos[this.state.index].content : "";
     },
     choices() {
-      return memos.map((memo) => memo.content.split("\n")[0]);
+      return memos.map((memo) => {
+        return { name: memo.content.split("\n")[0], value: memo };
+      });
     },
-    result() {
-      try {
-        afterAction(memos[this.state.index]);
-      } catch (e) {
-        console.log(e);
-      }
+    result(name) {
+      return this.map(name);
     },
-  });
+  };
 
-  prompt.run().catch(console.error);
+  return await prompt(question);
 }
 
 function run() {
@@ -91,16 +91,25 @@ function run() {
         isShowDetail: true,
         message: "Choose a note you want to see:",
       };
-      displayMemoPrompt(memos, promptOpts);
+      (async () => {
+        await displayMemoPrompt(memos, promptOpts);
+      })();
     } else if (opts.d) {
       const promptOpts = {
         isShowDetail: false,
         message: "Choose a note you want to delete:",
       };
-      displayMemoPrompt(memos, promptOpts, (memo) => {
-        memo.destroy();
-        console.log("Deleted memo");
-      });
+      (async () => {
+        const result = await displayMemoPrompt(memos, promptOpts);
+        // 選択肢は1つなので先頭の要素を取得
+        const selected = Object.values(result.memo)[0];
+        try {
+          selected.destroy();
+          console.log("Deleted memo");
+        } catch (error) {
+          console.log(error);
+        }
+      })();
     }
   } else {
     const content = fs.readFileSync("/dev/stdin", "utf8");
